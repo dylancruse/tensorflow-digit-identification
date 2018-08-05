@@ -1,32 +1,16 @@
 import tensorflow as tf
-from define_model import x, y, y_, train_step
-
-from tensorflow.examples.tutorials.mnist import input_data
-mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
-
-#Launch the model in an interactive session
-sess = tf.InteractiveSession()
-
-#Initialize Variables
-tf.global_variables_initializer().run()
-
-#Train the model in batches of 100
-for _ in range(1000):
-    batch_xs, batch_ys = mnist.train.next_batch(100)
-    sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
+from model.define_model import image_vectors, smax_model
 
 """
-Testing for accuracy
+Define training.
+Create placeholder for correct answers (one-hot vector with digit labels).
+Implement cross entropy to determine loss of the model.
+Uses backpropagation and gradient descent to tweak Variables to reduce loss. 
 """
-predicted_label = tf.argmax(y, 1)
-correct_label = tf.argmax(y_, 1)
 
-#List of booleans where the prediction was correct
-correct_predictions = tf.equal(predicted_label, correct_label)
+correct_labels = tf.placeholder(tf.float32, [None, 10])
 
-#Cast to floats and take the mean
-accuracy = tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
+cross_entropy = tf.reduce_mean(-tf.reduce_sum(
+    correct_labels * tf.log(smax_model), reduction_indices=[1]))
 
-#Run the test data, check accuracy
-acc = sess.run(accuracy, feed_dict={x: mnist.test.images, y_: mnist.test.labels})
-print("Model Accuracy: %{:.2f}".format(acc * 100))
+train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
